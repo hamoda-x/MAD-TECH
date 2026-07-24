@@ -1,23 +1,15 @@
-export type ProductCategory =
-  | "PC_BUILD"
-  | "CPU"
-  | "GPU"
-  | "RAM"
-  | "STORAGE"
-  | "MOTHERBOARD"
-  | "PSU"
-  | "CASE"
-  | "COOLING"
-  | "PERIPHERAL"
-  | "OTHER";
-
 export interface Product {
   id: string;
   name: string;
   description: string;
   price: number | string;
   imageUrl: string;
-  category: ProductCategory;
+  categoryId: string;
+  category?: {
+    id: string;
+    name: string;
+    slug: string;
+  };
   isAvailable: boolean;
   createdAt: string;
 }
@@ -62,19 +54,25 @@ export interface CreateOrderResponse {
   whatsappUrl: string;
 }
 
-export const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  PC_BUILD: "تجميعات PC",
-  CPU: "معالجات",
-  GPU: "كروت شاشة",
-  RAM: "ذاكرة RAM",
-  STORAGE: "تخزين",
-  MOTHERBOARD: "لوحات أم",
-  PSU: "مزودات طاقة",
-  CASE: "كيسات",
-  COOLING: "تبريد",
-  PERIPHERAL: "ملحقات",
-  OTHER: "أخرى",
-};
+export interface StoreSettings {
+  id: string;
+  storeName: string;
+  storeDescription: string | null;
+  whatsappNumber: string;
+  maintenanceMode: boolean;
+  maintenanceMessage: string | null;
+  primaryColor: string | null;
+  currency: string;
+  updatedAt: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt: string;
+  _count?: { products: number };
+}
 
 export function formatPrice(value: number | string): string {
   const num = typeof value === "string" ? Number.parseFloat(value) : value;

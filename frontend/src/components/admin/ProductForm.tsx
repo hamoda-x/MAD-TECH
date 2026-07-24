@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Product,
-  ProductCategory,
-  CATEGORY_LABELS,
   formatPrice,
 } from "@/types";
 import Button from "@/components/shared/Button";
 import { Input, Textarea, Select } from "@/components/shared/Input";
 import ImageUpload from "@/components/admin/CloudinaryUpload";
+import { getCategories, Category } from "@/lib/api";
 
 interface ProductFormProps {
   initial?: Product | null;
@@ -23,14 +22,9 @@ export interface ProductFormData {
   description: string;
   price: number;
   imageUrl: string;
-  category: ProductCategory;
+  categoryId: string;
   isAvailable: boolean;
 }
-
-const categoryOptions = Object.entries(CATEGORY_LABELS).map(([value, label]) => ({
-  value,
-  label,
-}));
 
 export default function ProductForm({
   initial,
@@ -44,11 +38,28 @@ export default function ProductForm({
     initial ? String(Number(initial.price)) : ""
   );
   const [imageUrl, setImageUrl] = useState(initial?.imageUrl || "");
-  const [category, setCategory] = useState<ProductCategory>(
-    initial?.category || "PC_BUILD"
-  );
+  const [categoryId, setCategoryId] = useState(initial?.categoryId || "");
   const [isAvailable, setIsAvailable] = useState(initial?.isAvailable ?? true);
   const [error, setError] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await getCategories();
+        setCategories(data);
+        if (!categoryId && data.length > 0 && !initial) {
+          setCategoryId(data[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      } finally {
+        setLoadingCategories(false);
+      }
+    }
+    loadCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +74,10 @@ export default function ProductForm({
       setError("يرجى إدخال سعر صحيح.");
       return;
     }
+    if (!categoryId) {
+      setError("يرجى اختيار التصنيف.");
+      return;
+    }
 
     try {
       await onSubmit({
@@ -70,13 +85,18 @@ export default function ProductForm({
         description: description.trim(),
         price: parsedPrice,
         imageUrl: imageUrl.trim(),
-        category,
+        categoryId,
         isAvailable,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "فشل حفظ المنتج");
     }
   };
+
+  const categoryOptions = categories.map((cat) => ({
+    value: cat.id,
+    label: cat.name,
+  }));
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -88,6 +108,7 @@ export default function ProductForm({
 
       <Input
         label="اسم المنتج"
+        name="productName"
         value={name}
         onChange={(e) => setName(e.target.value)}
         required
@@ -95,6 +116,7 @@ export default function ProductForm({
 
       <Textarea
         label="الوصف"
+        name="productDescription"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         rows={3}
@@ -103,6 +125,7 @@ export default function ProductForm({
 
       <Input
         label="السعر ($)"
+        name="productPrice"
         type="number"
         step="0.01"
         min="0"
@@ -112,18 +135,28 @@ export default function ProductForm({
         required
       />
 
-      <Select
-        label="الفئة"
-        value={category}
-        onChange={(e) => setCategory(e.target.value as ProductCategory)}
-        options={categoryOptions}
-      />
+      {loadingCategories ? (
+        <div>
+          <label className="block text-sm font-medium text-mad-text mb-2">التصنيف</label>
+          <div className="h-10 rounded-xl border border-mad-border bg-mad-bg animate-pulse" />
+        </div>
+      ) : (
+        <Select
+          label="التصنيف"
+          name="productCategory"
+          value={categoryId}
+          onChange={(e) => setCategoryId(e.target.value)}
+          options={categoryOptions}
+        />
+      )}
 
       <ImageUpload imageUrl={imageUrl} onChange={setImageUrl} />
 
       <label className="flex items-center gap-2 text-sm text-mad-muted">
         <input
           type="checkbox"
+          id="isAvailable"
+          name="isAvailable"
           checked={isAvailable}
           onChange={(e) => setIsAvailable(e.target.checked)}
           className="rounded border-mad-border bg-mad-bg text-mad-accent focus:ring-mad-accent"

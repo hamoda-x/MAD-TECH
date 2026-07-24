@@ -1,33 +1,33 @@
 "use client";
 
-import { useDirectionStore } from "@/store/directionStore";
-import { useThemeStore } from "@/store/themeStore";
+import { useLanguageStore } from "@/store/languageStore";
+import { useSettingsStore } from "@/store/settingsStore";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 export default function MADTechFooter() {
-  const { isRtl } = useDirectionStore();
-  const { isDark } = useThemeStore();
+  const dir = useLanguageStore((s) => s.dir);
+  const getStoreName = useSettingsStore((s) => s.getStoreName);
+  const storeName = getStoreName();
+  const { t } = useTranslation();
 
   return (
-    <footer className={`mt-auto border-t border-mad-border ${
-      isDark ? "bg-[#0d0d14]" : "bg-white"
-    }`}>
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+    <footer className="mt-auto border-t border-mad-border bg-mad-dark" dir={dir}>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
+          {/* Logo */}
           <div className="flex items-center gap-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-mad-accent text-xs font-bold text-white">
-              MT
-            </span>
-            <span className={`text-lg font-bold ${
-              isDark ? "text-white" : "text-gray-900"
-            }`}>
-              MAD<span className="text-mad-accent">-</span>TECH
+            <div className="w-10 h-10 bg-gradient-to-br from-mad-cyan to-mad-purple rounded-xl flex items-center justify-center shadow-lg shadow-mad-cyan/30">
+              <span className="text-white font-black text-lg leading-none">MT</span>
+            </div>
+            <span className="text-xl font-bold bg-gradient-to-r from-mad-cyan to-mad-purple bg-clip-text text-transparent">
+              {storeName || "MAD-TECH"}
             </span>
           </div>
-          <p className={`text-sm ${
-            isDark ? "text-gray-400" : "text-gray-600"
-          }`}>
-            © {new Date().getFullYear()} MAD-TECH.{" "}
-            {isRtl ? "جميع الحقوق محفوظة." : "All rights reserved."}
+
+          {/* Copyright */}
+          <p className="text-sm text-mad-text-secondary">
+            © {new Date().getFullYear()} {storeName || "MAD-TECH"}.{" "}
+            {t("allRightsReserved")}
           </p>
         </div>
       </div>

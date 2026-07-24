@@ -7,20 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum ProductCategory {
-  PC_BUILD
-  CPU
-  GPU
-  RAM
-  STORAGE
-  MOTHERBOARD
-  PSU
-  CASE
-  COOLING
-  PERIPHERAL
-  OTHER
-}
-
 enum OrderStatus {
   PENDING
   COMPLETED
@@ -32,18 +18,41 @@ model Admin {
   passwordHash String
 }
 
+model StoreSettings {
+  id                  String   @id @default("singleton")
+  storeName           String   @default("MAD_TECH")
+  storeDescription    String?
+  whatsappNumber      String   @default("218944623420")
+  maintenanceMode     Boolean  @default(false)
+  maintenanceMessage  String?
+  primaryColor        String?  @default("#0891b2")
+  currency            String   @default("USD")
+  updatedAt           DateTime @updatedAt
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  name      String
+  slug      String    @unique
+  createdAt DateTime  @default(now())
+  products  Product[]
+
+  @@index([slug])
+}
+
 model Product {
-  id          String          @id @default(cuid())
+  id          String      @id @default(cuid())
   name        String
   description String
-  price       Decimal         @db.Decimal(10, 2)
+  price       Decimal     @db.Decimal(10, 2)
   imageUrl    String
-  category    ProductCategory
-  isAvailable Boolean         @default(true)
-  createdAt   DateTime        @default(now())
+  categoryId  String
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  isAvailable Boolean     @default(true)
+  createdAt   DateTime    @default(now())
   orderItems  OrderItem[]
 
-  @@index([category])
+  @@index([categoryId])
   @@index([isAvailable])
 }
 

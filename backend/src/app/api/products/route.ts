@@ -1,16 +1,25 @@
 import { NextResponse } from "next/server";
-import { ProductCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth-helpers";
 
-const VALID_CATEGORIES = new Set<string>(Object.values(ProductCategory));
+async function checkMaintenance(): Promise<boolean> {
+  try {
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: "singleton" },
+      select: { maintenanceMode: true },
+    });
+    return settings?.maintenanceMode ?? false;
+  } catch {
+    return false;
+  }
+}
 
 interface CreateProductBody {
   name?: string;
   description?: string;
   price?: number | string;
   imageUrl?: string;
-  category?: string;
+  categoryId?: string;
   isAvailable?: boolean;
 }
 
@@ -39,8 +48,8 @@ function validateProductPayload(body: CreateProductBody) {
     errors.push("Product image URL is required.");
   }
 
-  if (!body.category || !VALID_CATEGORIES.has(body.category)) {
-    errors.push("Valid product category is required.");
+  if (!body.categoryId) {
+    errors.push("Product category is required.");
   }
 
   const price = body.price !== undefined ? parsePrice(body.price) : null;
@@ -53,23 +62,28 @@ function validateProductPayload(body: CreateProductBody) {
 
 export async function GET(request: Request) {
   try {
+    const session = await requireAdminSession();
+    if (!session) {
+      const maintenance = await checkMaintenance();
+      if (maintenance) {
+        return NextResponse.json(
+          { error: "المتجر مغلق للصيانة", maintenance: true },
+          { status: 503 }
+        );
+      }
+    }
+
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get("category");
+    const categoryId = searchParams.get("categoryId");
     const availableOnly = searchParams.get("available") === "true";
 
     const where: {
-      category?: ProductCategory;
+      categoryId?: string;
       isAvailable?: boolean;
     } = {};
 
-    if (category) {
-      if (!VALID_CATEGORIES.has(category)) {
-        return NextResponse.json(
-          { error: "Invalid category filter." },
-          { status: 400 }
-        );
-      }
-      where.category = category as ProductCategory;
+    if (categoryId) {
+      where.categoryId = categoryId;
     }
 
     if (availableOnly) {
@@ -78,6 +92,9 @@ export async function GET(request: Request) {
 
     const products = await prisma.product.findMany({
       where,
+      include: {
+        category: true,
+      },
       orderBy: { createdAt: "desc" },
     });
 
@@ -105,14 +122,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errors.join(" ") }, { status: 400 });
     }
 
+    const categoryExists = await prisma.category.findUnique({
+      where: { id: body.categoryId },
+    });
+
+    if (!categoryExists) {
+      return NextResponse.json(
+        { error: "Category not found." },
+        { status: 400 }
+      );
+    }
+
     const product = await prisma.product.create({
       data: {
         name: body.name!.trim(),
         description: body.description!.trim(),
         price,
         imageUrl: body.imageUrl!.trim(),
-        category: body.category as ProductCategory,
+        categoryId: body.categoryId!,
         isAvailable: body.isAvailable ?? true,
+      },
+      include: {
+        category: true,
       },
     });
 

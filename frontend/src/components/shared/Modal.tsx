@@ -42,16 +42,16 @@ export default function Modal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
       <div
-        className={`relative w-full ${sizes[size]} max-h-[90vh] overflow-y-auto rounded-xl border border-mad-border bg-mad-surface shadow-2xl`}
+        className={`relative w-full ${sizes[size]} max-h-[95vh] sm:max-h-[90vh] overflow-y-auto rounded-xl border border-mad-border bg-mad-surface shadow-2xl`}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-mad-border bg-mad-surface px-6 py-4">
-          <h2 className="text-lg font-semibold text-mad-text">{title}</h2>
+        <div className="sticky top-0 flex items-center justify-between border-b border-mad-border bg-mad-surface px-4 sm:px-6 py-3 sm:py-4">
+          <h2 className="text-base sm:text-lg font-semibold text-mad-text">{title}</h2>
           <button
             onClick={onClose}
             className="rounded-lg p-1 text-mad-muted transition-colors hover:bg-mad-border hover:text-mad-text"
@@ -60,7 +60,7 @@ export default function Modal({
             ✕
           </button>
         </div>
-        <div className="p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </div>
     </div>
   );

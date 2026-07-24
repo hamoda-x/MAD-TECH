@@ -23,8 +23,14 @@ const config: Config = {
           "accent-light": "var(--mad-accent-light)",
           muted: "var(--mad-muted)",
           text: "var(--mad-text)",
+          "text-primary": "var(--mad-text-primary)",
+          "text-secondary": "var(--mad-text-secondary)",
           green: "var(--mad-green)",
           card: "var(--mad-card)",
+          dark: "var(--mad-dark)",
+          "dark-hover": "var(--mad-dark-hover)",
+          purple: "var(--mad-purple)",
+          cyan: "#00d4ff",
         },
       },
       spacing: {
@@ -42,6 +48,24 @@ const config: Config = {
       borderRadius: {
         "start-lg": "0.5rem",
         "end-lg": "0.5rem",
+      },
+      animation: {
+        "pulse-slow": "pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        "fade-in": "fadeIn 0.5s ease-out forwards",
+        "slide-up": "slideUp 0.6s ease-out forwards",
+      },
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        slideUp: {
+          "0%": { opacity: "0", transform: "translateY(20px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      screens: {
+        xs: "480px",
       },
     },
   },

@@ -3,9 +3,10 @@ import { InputHTMLAttributes, TextareaHTMLAttributes } from "react";
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  helperText?: string;
 }
 
-export function Input({ label, error, className = "", id, ...props }: InputProps) {
+export function Input({ label, error, helperText, className = "", id, ...props }: InputProps) {
   const inputId = id || props.name;
 
   return (
@@ -21,6 +22,7 @@ export function Input({ label, error, className = "", id, ...props }: InputProps
         {...props}
       />
       {error && <p className="text-sm text-red-400">{error}</p>}
+      {helperText && !error && <p className="text-xs text-mad-muted">{helperText}</p>}
     </div>
   );
 }

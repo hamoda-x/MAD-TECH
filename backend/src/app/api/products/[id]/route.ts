@@ -1,16 +1,13 @@
 import { NextResponse } from "next/server";
-import { ProductCategory } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireAdminSession } from "@/lib/auth-helpers";
-
-const VALID_CATEGORIES = new Set<string>(Object.values(ProductCategory));
 
 interface UpdateProductBody {
   name?: string;
   description?: string;
   price?: number | string;
   imageUrl?: string;
-  category?: string;
+  categoryId?: string;
   isAvailable?: boolean;
 }
 
@@ -57,8 +54,13 @@ export async function PUT(
       errors.push("Product image URL cannot be empty.");
     }
 
-    if (body.category !== undefined && !VALID_CATEGORIES.has(body.category)) {
-      errors.push("Invalid product category.");
+    if (body.categoryId) {
+      const categoryExists = await prisma.category.findUnique({
+        where: { id: body.categoryId },
+      });
+      if (!categoryExists) {
+        errors.push("Category not found.");
+      }
     }
 
     let parsedPrice: number | undefined;
@@ -84,10 +86,11 @@ export async function PUT(
         }),
         ...(parsedPrice !== undefined && { price: parsedPrice }),
         ...(body.imageUrl !== undefined && { imageUrl: body.imageUrl.trim() }),
-        ...(body.category !== undefined && {
-          category: body.category as ProductCategory,
-        }),
+        ...(body.categoryId !== undefined && { categoryId: body.categoryId }),
         ...(body.isAvailable !== undefined && { isAvailable: body.isAvailable }),
+      },
+      include: {
+        category: true,
       },
     });
 

@@ -13,6 +13,18 @@ interface CreateOrderBody {
   items?: OrderCartItem[];
 }
 
+async function checkMaintenance(): Promise<boolean> {
+  try {
+    const settings = await prisma.storeSettings.findUnique({
+      where: { id: "singleton" },
+      select: { maintenanceMode: true },
+    });
+    return settings?.maintenanceMode ?? false;
+  } catch {
+    return false;
+  }
+}
+
 function buildWhatsAppMessage(items: OrderCartItem[], totalAmount: number) {
   const lines = [
     "*MAD_TECH - طلب جديد*",
@@ -64,6 +76,14 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const maintenance = await checkMaintenance();
+    if (maintenance) {
+      return NextResponse.json(
+        { error: "المتجر مغلق للصيانة", maintenance: true },
+        { status: 503 }
+      );
+    }
+
     const body = (await request.json()) as CreateOrderBody;
 
     if (!body.items || body.items.length === 0) {
@@ -89,7 +109,19 @@ export async function POST(request: Request) {
       }
     }
 
-    const whatsappNumber = process.env.WHATSAPP_NUMBER;
+    let whatsappNumber: string | null = null;
+    try {
+      const settings = await prisma.storeSettings.findUnique({
+        where: { id: "singleton" },
+        select: { whatsappNumber: true },
+      });
+      whatsappNumber = settings?.whatsappNumber || null;
+    } catch {
+      whatsappNumber = null;
+    }
+    if (!whatsappNumber) {
+      whatsappNumber = process.env.WHATSAPP_NUMBER || null;
+    }
     if (!whatsappNumber) {
       return NextResponse.json(
         { error: "WhatsApp number is not configured." },

@@ -1,63 +1,58 @@
 "use client";
 
-import { ProductCategory, CATEGORY_LABELS } from "@/types";
-import { useDirectionStore } from "@/store/directionStore";
+import { useEffect, useState } from "react";
+import { getCategories, Category } from "@/lib/api";
+import { useLanguageStore } from "@/store/languageStore";
+import { useTranslation } from "@/lib/i18n/useTranslation";
 
 interface CategoryFilterProps {
-  selected: ProductCategory | "ALL";
-  onChange: (category: ProductCategory | "ALL") => void;
+  selected: string | "ALL";
+  onChange: (categoryId: string | "ALL") => void;
 }
-
-const categories: Array<ProductCategory | "ALL"> = [
-  "ALL",
-  "PC_BUILD",
-  "CPU",
-  "GPU",
-  "RAM",
-  "STORAGE",
-  "MOTHERBOARD",
-  "PSU",
-  "CASE",
-  "COOLING",
-  "PERIPHERAL",
-  "OTHER",
-];
-
-const CATEGORY_LABELS_EN: Record<ProductCategory, string> = {
-  PC_BUILD: "PC Build",
-  CPU: "Processor",
-  GPU: "Graphics Card",
-  RAM: "RAM",
-  STORAGE: "Storage",
-  MOTHERBOARD: "Motherboard",
-  PSU: "Power Supply",
-  CASE: "Case",
-  COOLING: "Cooling",
-  PERIPHERAL: "Peripheral",
-  OTHER: "Other",
-};
 
 export default function CategoryFilter({
   selected,
   onChange,
 }: CategoryFilterProps) {
-  const { isRtl } = useDirectionStore();
+  const [categories, setCategories] = useState<Category[]>([]);
+  const lang = useLanguageStore((s) => s.lang);
+  const { t } = useTranslation();
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await getCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error("Failed to load categories:", err);
+      }
+    }
+    loadCategories();
+  }, []);
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+      <button
+        onClick={() => onChange("ALL")}
+        className={`rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors ${
+          selected === "ALL"
+            ? "bg-mad-accent text-white font-medium"
+            : "border border-mad-border bg-mad-surface text-mad-muted hover:border-mad-accent hover:text-mad-text"
+        }`}
+      >
+        {t("all")}
+      </button>
       {categories.map((cat) => (
         <button
-          key={cat}
-          onClick={() => onChange(cat)}
-          className={`rounded-lg px-4 py-2 text-sm transition-colors ${
-            selected === cat
+          key={cat.id}
+          onClick={() => onChange(cat.id)}
+          className={`rounded-lg px-2.5 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm transition-colors ${
+            selected === cat.id
               ? "bg-mad-accent text-white font-medium"
               : "border border-mad-border bg-mad-surface text-mad-muted hover:border-mad-accent hover:text-mad-text"
           }`}
         >
-          {cat === "ALL"
-            ? (isRtl ? "الكل" : "All")
-            : (isRtl ? CATEGORY_LABELS[cat] : CATEGORY_LABELS_EN[cat])}
+          {cat.name}
         </button>
       ))}
     </div>

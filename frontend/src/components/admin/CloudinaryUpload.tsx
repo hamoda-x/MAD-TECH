@@ -42,7 +42,7 @@ export default function ImageUpload({ imageUrl, onChange }: ImageUploadProps) {
 
   return (
     <div className="space-y-3">
-      <label className="block text-sm text-mad-muted">صورة المنتج</label>
+      <label htmlFor="productImage" className="block text-sm text-mad-muted">صورة المنتج</label>
 
       {imageUrl && (
         <div className="relative h-40 w-40 overflow-hidden rounded-lg border border-mad-border">
@@ -57,6 +57,8 @@ export default function ImageUpload({ imageUrl, onChange }: ImageUploadProps) {
 
       <input
         ref={fileInputRef}
+        id="productImage"
+        name="productImage"
         type="file"
         accept="image/*"
         onChange={handleFileChange}
