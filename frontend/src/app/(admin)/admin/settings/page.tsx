@@ -329,7 +329,7 @@ export default function AdminSettingsPage() {
                   value={whatsappNumber}
                   onChange={(e) => setWhatsappNumber(e.target.value)}
                   className="w-full rounded-xl border border-mad-border bg-mad-bg px-4 py-3 text-mad-text placeholder-mad-muted outline-none transition-colors focus:border-mad-accent"
-                  placeholder="218944623420"
+                  placeholder="218910211234"
                 />
               </div>
               <div>

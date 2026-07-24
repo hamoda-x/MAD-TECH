@@ -22,7 +22,7 @@ model StoreSettings {
   id                  String   @id @default("singleton")
   storeName           String   @default("MAD_TECH")
   storeDescription    String?
-  whatsappNumber      String   @default("218944623420")
+  whatsappNumber      String   @default("218910211234")
   maintenanceMode     Boolean  @default(false)
   maintenanceMessage  String?
   primaryColor        String?  @default("#0891b2")
