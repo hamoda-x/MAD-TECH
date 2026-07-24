@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Product,
   formatPrice,
@@ -43,13 +43,20 @@ export default function ProductForm({
   const [error, setError] = useState("");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const initialRef = useRef(initial);
+  const categoryIdRef = useRef(categoryId);
+
+  useEffect(() => {
+    initialRef.current = initial;
+    categoryIdRef.current = categoryId;
+  });
 
   useEffect(() => {
     async function loadCategories() {
       try {
         const data = await getCategories();
         setCategories(data);
-        if (!categoryId && data.length > 0 && !initial) {
+        if (!categoryIdRef.current && data.length > 0 && !initialRef.current) {
           setCategoryId(data[0].id);
         }
       } catch (err) {

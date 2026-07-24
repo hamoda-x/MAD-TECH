@@ -51,7 +51,7 @@ export default function HomePage() {
     }
 
     load();
-  }, [category, lang]);
+  }, [category, lang, t]);
 
   const displayedProducts = showAll ? products : products.slice(0, 8);
 

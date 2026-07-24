@@ -110,7 +110,7 @@ export default function AdminSettingsPage() {
       }
     }
     load();
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     if (success) {

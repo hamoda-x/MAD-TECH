@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: mad-tech
+    runtime: node
+    plan: free
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: NEXTAUTH_URL
+        value: https://mad-tech.onrender.com
+      - key: WHATSAPP_NUMBER
+        sync: false
+      - key: FRONTEND_URL
+        value: https://mad-tech.onrender.com
+      - key: NEXT_PUBLIC_API_URL
+        value: https://mad-tech-backend.onrender.com/api
