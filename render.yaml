@@ -1,11 +1,13 @@
 services:
+  # Backend API Service
   - type: web
-    name: mad-tech
+    name: mad-tech-api
     runtime: node
     plan: free
-    buildCommand: npm install --include=dev && npm run build
+    rootDir: backend
+    buildCommand: npm install --include=dev && npx prisma generate && npm run build
     startCommand: npm run start
-    healthCheckPath: /
+    healthCheckPath: /api/products
     envVars:
       - key: NODE_ENV
         value: production
@@ -14,10 +16,39 @@ services:
       - key: NEXTAUTH_SECRET
         sync: false
       - key: NEXTAUTH_URL
-        value: https://mad-tech.onrender.com
+        fromDatabase:
+          name: mad-tech-db
+          property: host
+          type: url
       - key: WHATSAPP_NUMBER
         sync: false
       - key: FRONTEND_URL
         value: https://mad-tech.onrender.com
+
+  # Frontend Service
+  - type: web
+    name: mad-tech
+    runtime: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm run start
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: NEXTAUTH_URL
+        value: https://mad-tech.onrender.com
+      - key: BACKEND_URL
+        value: https://mad-tech-api.onrender.com
       - key: NEXT_PUBLIC_API_URL
-        value: https://mad-tech-backend.onrender.com/api
+        value: https://mad-tech-api.onrender.com/api
+
+databases:
+  - name: mad-tech-db
+    plan: free
+    databaseName: mad_tech
