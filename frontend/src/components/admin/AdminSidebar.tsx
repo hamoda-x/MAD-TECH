@@ -96,11 +96,12 @@ const AdminSidebar = ({
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 right-0 z-50 flex w-64 flex-col border-l border-mad-border bg-mad-surface transition-transform duration-300 lg:sticky lg:top-0 lg:translate-x-0 lg:z-10 ${
+        className={`fixed inset-y-0 right-0 z-50 flex h-screen w-64 flex-col border-l border-mad-border bg-mad-surface transition-transform duration-300 lg:translate-x-0 lg:z-10 ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="border-b border-mad-border p-4">
+        {/* Header - fixed */}
+        <div className="shrink-0 border-b border-mad-border p-4">
           <div className="flex items-center justify-between">
             <Link href="/admin" className="flex items-center gap-3" onClick={onClose}>
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-mad-accent">
@@ -125,7 +126,8 @@ const AdminSidebar = ({
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 p-3">
+        {/* Navigation - scrollable */}
+        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {navLinks.map((link) => {
             const isActive =
               pathname === link.href ||
@@ -149,7 +151,8 @@ const AdminSidebar = ({
           })}
         </nav>
 
-        <div className="space-y-1 border-t border-mad-border p-3">
+        {/* Bottom - fixed */}
+        <div className="shrink-0 border-t border-mad-border p-3 space-y-1">
           <Link
             href="/"
             className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-mad-muted transition-all duration-200 hover:bg-mad-bg hover:text-mad-text"
@@ -159,10 +162,8 @@ const AdminSidebar = ({
             </svg>
             العودة للمتجر
           </Link>
-        </div>
 
-        <div className="border-t border-mad-border p-3">
-          <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-xl px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-mad-accent/10">
               <svg className="h-5 w-5 text-mad-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />

@@ -25,43 +25,59 @@ async function isMaintenanceMode(): Promise<boolean> {
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-  const method = request.method;
+  try {
+    const { pathname } = request.nextUrl;
+    const method = request.method;
 
-  if (request.method === "OPTIONS") {
-    return handleCors(request, new NextResponse(null, { status: 204 }));
-  }
-
-  const isProtectedWrite =
-    pathname.startsWith("/api/products") && WRITE_METHODS.has(method);
-
-  const isProtectedAdminRead =
-    (pathname === "/api/orders" && method === "GET") ||
-    pathname === "/api/reports" ||
-    (pathname.startsWith("/api/orders/") && method === "PATCH");
-
-  const isProtectedSettings =
-    (pathname === "/api/settings" && method === "PUT") ||
-    pathname === "/api/settings/change-password" ||
-    pathname === "/api/settings/backup";
-
-  if (isProtectedWrite || isProtectedAdminRead || isProtectedSettings) {
-    const token = await requireAdminToken(request);
-
-    if (!token) {
-      return handleCors(
-        request,
-        NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-      );
+    if (request.method === "OPTIONS") {
+      return handleCors(request, new NextResponse(null, { status: 204 }));
     }
-  }
 
-  const isPublicProductsRead =
-    pathname.startsWith("/api/products") && method === "GET";
+    const isProtectedWrite =
+      pathname.startsWith("/api/products") && WRITE_METHODS.has(method);
 
-  if (isPublicProductsRead) {
-    const token = await requireAdminToken(request);
-    if (!token) {
+    const isProtectedAdminRead =
+      (pathname === "/api/orders" && method === "GET") ||
+      pathname === "/api/reports" ||
+      (pathname.startsWith("/api/orders/") && method === "PATCH");
+
+    const isProtectedSettings =
+      (pathname === "/api/settings" && method === "PUT") ||
+      pathname === "/api/settings/change-password" ||
+      pathname === "/api/settings/backup";
+
+    if (isProtectedWrite || isProtectedAdminRead || isProtectedSettings) {
+      const token = await requireAdminToken(request);
+
+      if (!token) {
+        return handleCors(
+          request,
+          NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        );
+      }
+    }
+
+    const isPublicProductsRead =
+      pathname.startsWith("/api/products") && method === "GET";
+
+    if (isPublicProductsRead) {
+      const token = await requireAdminToken(request);
+      if (!token) {
+        const maintenance = await isMaintenanceMode();
+        if (maintenance) {
+          return handleCors(
+            request,
+            NextResponse.json(
+              { error: "المتجر مغلق للصيانة", maintenance: true },
+              { status: 503 }
+            )
+          );
+        }
+      }
+    }
+
+    const isPublicOrderCreate = pathname === "/api/orders" && method === "POST";
+    if (isPublicOrderCreate) {
       const maintenance = await isMaintenanceMode();
       if (maintenance) {
         return handleCors(
@@ -73,23 +89,12 @@ export async function middleware(request: NextRequest) {
         );
       }
     }
-  }
 
-  const isPublicOrderCreate = pathname === "/api/orders" && method === "POST";
-  if (isPublicOrderCreate) {
-    const maintenance = await isMaintenanceMode();
-    if (maintenance) {
-      return handleCors(
-        request,
-        NextResponse.json(
-          { error: "المتجر مغلق للصيانة", maintenance: true },
-          { status: 503 }
-        )
-      );
-    }
+    return handleCors(request, NextResponse.next());
+  } catch (error) {
+    console.error("Middleware error:", error);
+    return handleCors(request, NextResponse.next());
   }
-
-  return handleCors(request, NextResponse.next());
 }
 
 function handleCors(request: NextRequest, response: NextResponse) {
