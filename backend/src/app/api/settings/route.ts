@@ -16,6 +16,10 @@ async function getOrCreateSettings() {
   return settings;
 }
 
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204 });
+}
+
 export async function GET() {
   try {
     const settings = await getOrCreateSettings();
