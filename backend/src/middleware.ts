@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { prisma } from "@/lib/prisma";
 
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 
@@ -10,18 +9,6 @@ async function requireAdminToken(request: NextRequest) {
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
   });
-}
-
-async function isMaintenanceMode(): Promise<boolean> {
-  try {
-    const settings = await prisma.storeSettings.findUnique({
-      where: { id: "singleton" },
-      select: { maintenanceMode: true },
-    });
-    return settings?.maintenanceMode ?? false;
-  } catch {
-    return false;
-  }
 }
 
 export async function middleware(request: NextRequest) {
@@ -53,39 +40,6 @@ export async function middleware(request: NextRequest) {
         return handleCors(
           request,
           NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-        );
-      }
-    }
-
-    const isPublicProductsRead =
-      pathname.startsWith("/api/products") && method === "GET";
-
-    if (isPublicProductsRead) {
-      const token = await requireAdminToken(request);
-      if (!token) {
-        const maintenance = await isMaintenanceMode();
-        if (maintenance) {
-          return handleCors(
-            request,
-            NextResponse.json(
-              { error: "المتجر مغلق للصيانة", maintenance: true },
-              { status: 503 }
-            )
-          );
-        }
-      }
-    }
-
-    const isPublicOrderCreate = pathname === "/api/orders" && method === "POST";
-    if (isPublicOrderCreate) {
-      const maintenance = await isMaintenanceMode();
-      if (maintenance) {
-        return handleCors(
-          request,
-          NextResponse.json(
-            { error: "المتجر مغلق للصيانة", maintenance: true },
-            { status: 503 }
-          )
         );
       }
     }
