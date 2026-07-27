@@ -9,12 +9,13 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [orders, orderItems] = await Promise.all([
+    const [orders, orderItems, totalProducts] = await Promise.all([
       prisma.order.findMany({
         include: { items: true },
         orderBy: { createdAt: "desc" },
       }),
       prisma.orderItem.findMany(),
+      prisma.product.count(),
     ]);
 
     const totalOrders = orders.length;
@@ -76,6 +77,7 @@ export async function GET() {
     }
 
     return NextResponse.json({
+      totalProducts,
       totalOrders,
       totalRevenue,
       pendingOrders,

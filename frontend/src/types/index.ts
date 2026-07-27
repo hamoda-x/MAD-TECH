@@ -38,6 +38,7 @@ export interface Order {
 }
 
 export interface ReportsData {
+  totalProducts: number;
   totalOrders: number;
   totalRevenue: number;
   pendingOrders: number;
