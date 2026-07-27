@@ -7,8 +7,10 @@ import {
   changePassword,
   backupDatabase,
   restoreDatabase,
+  getSystemInfo,
 } from "@/lib/api";
 import { StoreSettings } from "@/types";
+import type { SystemInfo } from "@/lib/api";
 import Loader from "@/components/shared/Loader";
 import ConfirmModal from "@/components/admin/ConfirmModal";
 import { useLanguageStore } from "@/store/languageStore";
@@ -91,11 +93,12 @@ export default function AdminSettingsPage() {
   const [restoring, setRestoring] = useState(false);
   const [restoreConfirm, setRestoreConfirm] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [systemInfo, setSystemInfo] = useState<SystemInfo | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
-        const data = await getSettings();
+        const [data, sysInfo] = await Promise.all([getSettings(), getSystemInfo()]);
         setSettings(data);
         setStoreName(data.storeName);
         setStoreDescription(data.storeDescription || "");
@@ -103,6 +106,7 @@ export default function AdminSettingsPage() {
         setCurrency(data.currency);
         setMaintenanceMode(data.maintenanceMode);
         setMaintenanceMessage(data.maintenanceMessage || "");
+        setSystemInfo(sysInfo);
       } catch (err) {
         setError(err instanceof Error ? err.message : t("error"));
       } finally {
@@ -377,27 +381,14 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-mad-muted">{t("storage") || "التخزين"}</p>
-                    <p className="text-sm font-medium text-mad-text">{t("used") || "مستخدم"}</p>
+                    <p className="text-sm font-medium text-mad-text">
+                      {systemInfo?.totalRecords ?? 0} {lang === "ar" ? "سجل" : "records"}
+                    </p>
                   </div>
-                  <div className="relative h-12 w-12">
-                    <svg className="h-12 w-12 -rotate-90" viewBox="0 0 36 36">
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        className="text-mad-border"
-                      />
-                      <path
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="3"
-                        strokeDasharray="80, 100"
-                        className="text-mad-accent"
-                      />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mad-accent/10">
+                    <svg className="h-6 w-6 text-mad-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
                     </svg>
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-medium text-mad-text">80%</span>
                   </div>
                 </div>
               </div>
@@ -405,12 +396,20 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-mad-muted">{t("database") || "قاعدة البيانات"}</p>
-                    <p className="text-sm font-medium text-green-500">{t("connected") || "متصلة"}</p>
+                    <p className={`text-sm font-medium ${systemInfo?.dbConnected ? "text-green-500" : "text-red-500"}`}>
+                      {systemInfo?.dbConnected ? (t("connected") || "متصلة") : (t("disconnected") || "غير متصلة")}
+                    </p>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
-                    <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-full ${systemInfo?.dbConnected ? "bg-green-500/10" : "bg-red-500/10"}`}>
+                    {systemInfo?.dbConnected ? (
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    ) : (
+                      <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
                   </div>
                 </div>
               </div>
@@ -418,12 +417,20 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-mad-muted">{t("server") || "الخادم"}</p>
-                    <p className="text-sm font-medium text-green-500">{t("running") || "يعمل"}</p>
+                    <p className={`text-sm font-medium ${systemInfo?.serverRunning ? "text-green-500" : "text-red-500"}`}>
+                      {systemInfo?.serverRunning ? (t("running") || "يعمل") : (t("stopped") || "متوقف")}
+                    </p>
                   </div>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500/10">
-                    <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                    </svg>
+                  <div className={`flex h-12 w-12 items-center justify-center rounded-full ${systemInfo?.serverRunning ? "bg-green-500/10" : "bg-red-500/10"}`}>
+                    {systemInfo?.serverRunning ? (
+                      <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    ) : (
+                      <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    )}
                   </div>
                 </div>
               </div>
@@ -431,7 +438,7 @@ export default function AdminSettingsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-mad-muted">{t("version") || "الإصدار"}</p>
-                    <p className="text-sm font-medium text-mad-text">v1.0.0</p>
+                    <p className="text-sm font-medium text-mad-text">{systemInfo?.version || "1.0.0"}</p>
                   </div>
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-mad-accent/10">
                     <svg className="h-6 w-6 text-mad-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

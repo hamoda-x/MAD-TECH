@@ -21,30 +21,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-const revenueData = [
-  { name: "03 أبريل", value: 400 },
-  { name: "04 أبريل", value: 800 },
-  { name: "05 أبريل", value: 600 },
-  { name: "06 أبريل", value: 1200 },
-  { name: "07 أبريل", value: 900 },
-  { name: "08 أبريل", value: 1500 },
-  { name: "09 أبريل", value: 1800 },
-  { name: "10 أبريل", value: 1400 },
-  { name: "11 أبريل", value: 2000 },
-  { name: "12 أبريل", value: 1600 },
-  { name: "13 أبريل", value: 2200 },
-];
-
-const ordersBarData = [
-  { name: "07 مايو", value: 250 },
-  { name: "08 مايو", value: 380 },
-  { name: "09 مايو", value: 420 },
-  { name: "10 مايو", value: 300 },
-  { name: "11 مايو", value: 500 },
-  { name: "12 مايو", value: 350 },
-  { name: "13 مايو", value: 450 },
-];
-
 const statsIcons = {
   orders: (
     <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -76,6 +52,13 @@ const statsIcons = {
 const statusStyles: Record<string, string> = {
   COMPLETED: "bg-green-500/10 text-green-500",
   PENDING: "bg-amber-500/10 text-amber-500",
+  CANCELLED: "bg-red-500/10 text-red-500",
+};
+
+const statusLabels: Record<string, string> = {
+  COMPLETED: "مكتمل",
+  PENDING: "معلق",
+  CANCELLED: "ملغي",
 };
 
 export default function AdminDashboardPage() {
@@ -123,12 +106,6 @@ export default function AdminDashboardPage() {
           </p>
         </div>
         <div className="flex gap-2 sm:gap-3">
-          <button className="flex items-center gap-2 rounded-xl border border-mad-border bg-mad-surface px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm text-mad-text transition-colors hover:border-mad-accent">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-            </svg>
-            اليوم
-          </button>
           <Link
             href="/admin/products"
             className="flex items-center gap-2 rounded-xl bg-mad-accent px-3 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-medium text-white transition-all hover:bg-mad-accent-light hover:shadow-lg hover:shadow-mad-accent/25"
@@ -145,62 +122,44 @@ export default function AdminDashboardPage() {
         <StatsCard
           title={t("totalProducts")}
           value={data.totalOrders}
-          change="+12% عن الشهر الماضي"
-          changeType="positive"
           icon={statsIcons.orders}
         />
         <StatsCard
           title={t("pendingOrders")}
           value={data.pendingOrders}
-          change="-20% عن الشهر الماضي"
-          changeType="negative"
-          accent="text-red-500"
+          accent="text-amber-500"
           icon={statsIcons.pending}
         />
         <StatsCard
           title={t("totalRevenue")}
           value={formatPrice(data.totalRevenue)}
-          change="+18% عن الشهر الماضي"
-          changeType="positive"
           accent="text-green-500"
           icon={statsIcons.revenue}
         />
         <StatsCard
           title={t("totalOrders")}
           value={data.totalOrders.toLocaleString()}
-          change="+18% عن الشهر الماضي"
-          changeType="positive"
           icon={statsIcons.completed}
         />
         <StatsCard
           title={lang === "ar" ? "زوار اليوم" : "Today's Visitors"}
           value={visitorData?.todayCount ?? 0}
           subtitle={lang === "ar" ? `${visitorData?.weekCount ?? 0} زائر هذا الأسبوع` : `${visitorData?.weekCount ?? 0} this week`}
-          changeType="positive"
           icon={statsIcons.visitors}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         <div className="rounded-2xl border border-mad-border bg-mad-surface p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-mad-text">{t("revenue")}</h2>
-              <p className="mt-1 text-sm text-mad-muted">
-                {formatPrice(data.totalRevenue)}
-              </p>
-              <p className="text-xs text-green-500">+18% عن الشهر الماضي</p>
-            </div>
-            <button className="flex items-center gap-1 rounded-lg border border-mad-border px-3 py-1.5 text-xs text-mad-muted transition-colors hover:border-mad-accent hover:text-mad-accent">
-              {t("last7days")}
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </button>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-mad-text">{t("revenue")}</h2>
+            <p className="mt-1 text-sm text-mad-muted">
+              {formatPrice(data.totalRevenue)} {lang === "ar" ? "إجمالي" : "total"}
+            </p>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={revenueData}>
+              <LineChart data={data.revenueChart}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--mad-border)" />
                 <XAxis
                   dataKey="name"
@@ -237,24 +196,15 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="rounded-2xl border border-mad-border bg-mad-surface p-6">
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-mad-text">{t("orders2")}</h2>
-              <p className="mt-1 text-sm text-mad-muted">
-                {data.totalOrders.toLocaleString()} {t("items")}
-              </p>
-              <p className="text-xs text-green-500">+18% عن الشهر الماضي</p>
-            </div>
-            <button className="flex items-center gap-1 rounded-lg border border-mad-border px-3 py-1.5 text-xs text-mad-muted transition-colors hover:border-mad-accent hover:text-mad-accent">
-              {t("last7days")}
-              <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-              </svg>
-            </button>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-mad-text">{t("orders2")}</h2>
+            <p className="mt-1 text-sm text-mad-muted">
+              {data.totalOrders.toLocaleString()} {t("items")}
+            </p>
           </div>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={ordersBarData}>
+              <BarChart data={data.ordersChart}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--mad-border)" />
                 <XAxis
                   dataKey="name"
@@ -307,17 +257,18 @@ export default function AdminDashboardPage() {
                 <thead>
                   <tr className="border-b border-mad-border text-mad-muted">
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">#</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">رقم الطلب</th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">التاريخ</th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">الحالة</th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">المنتجات</th>
                     <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">المبلغ</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">إجراءات</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-mad-border">
                   {data.recentOrders.map((order, idx) => (
                     <tr key={order.id} className="transition-colors hover:bg-mad-bg/50">
                       <td className="px-6 py-4 text-mad-text">#{idx + 1}</td>
+                      <td className="px-6 py-4 font-mono text-xs font-medium text-mad-accent">{order.orderNumber}</td>
                       <td className="px-6 py-4 text-mad-muted">
                         {formatDate(order.createdAt)}
                       </td>
@@ -327,7 +278,7 @@ export default function AdminDashboardPage() {
                             statusStyles[order.status] || ""
                           }`}
                         >
-                          {order.status === "COMPLETED" ? t("completed") : t("pending")}
+                          {statusLabels[order.status] || order.status}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-mad-text">
@@ -335,13 +286,6 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-6 py-4 font-medium text-mad-accent">
                         {formatPrice(order.totalAmount)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <button className="flex h-8 w-8 items-center justify-center rounded-lg text-mad-muted transition-colors hover:bg-mad-bg hover:text-mad-text">
-                          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z" />
-                          </svg>
-                        </button>
                       </td>
                     </tr>
                   ))}
@@ -381,18 +325,6 @@ export default function AdminDashboardPage() {
                     </div>
                     <div>
                       <p className="font-medium text-mad-text">{product.name}</p>
-                      <div className="mt-0.5 flex items-center gap-0.5">
-                        {[...Array(5)].map((_, s) => (
-                          <svg
-                            key={s}
-                            className={`h-3 w-3 ${s < 4 ? "text-amber-400" : "text-gray-300"}`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
                     </div>
                   </div>
                   <div className="text-left">
@@ -400,7 +332,7 @@ export default function AdminDashboardPage() {
                       {formatPrice(product.revenue)}
                     </p>
                     <p className="text-xs text-mad-muted">
-                      {product.quantity} مبيعة
+                      {product.quantity} {lang === "ar" ? "مبيعة" : "sold"}
                     </p>
                   </div>
                 </div>

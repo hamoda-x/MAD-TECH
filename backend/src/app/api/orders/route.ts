@@ -11,6 +11,9 @@ interface OrderCartItem {
 
 interface CreateOrderBody {
   items?: OrderCartItem[];
+  customerName?: string;
+  customerPhone?: string;
+  customerAddress?: string;
 }
 
 async function checkMaintenance(): Promise<boolean> {
@@ -25,20 +28,56 @@ async function checkMaintenance(): Promise<boolean> {
   }
 }
 
-function buildWhatsAppMessage(items: OrderCartItem[], totalAmount: number) {
+async function generateOrderNumber(): Promise<string> {
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
+
+  const countToday = await prisma.order.count({
+    where: {
+      createdAt: { gte: todayStart, lt: todayEnd },
+    },
+  });
+
+  const seq = String(countToday + 1).padStart(4, "0");
+  return `MT-${dateStr}-${seq}`;
+}
+
+function buildWhatsAppMessage(
+  orderNumber: string,
+  items: OrderCartItem[],
+  totalAmount: number,
+  customerName?: string,
+  customerPhone?: string,
+  customerAddress?: string
+) {
   const lines = [
     "*MAD_TECH - طلب جديد*",
     "",
-    "*تفاصيل المنتجات:*",
-    ...items.map(
-      (item, index) =>
-        `${index + 1}. ${item.name}\n   الكمية: ${item.quantity}\n   السعر: $${item.price.toFixed(2)}`
-    ),
+    `*رقم الطلب: ${orderNumber}*`,
     "",
-    `*الإجمالي: $${totalAmount.toFixed(2)}*`,
-    "",
-    "شكراً لاختياركم MAD_TECH!",
   ];
+
+  if (customerName || customerPhone || customerAddress) {
+    lines.push("*بيانات العميل:*");
+    if (customerName) lines.push(`الاسم: ${customerName}`);
+    if (customerPhone) lines.push(`الجوال: ${customerPhone}`);
+    if (customerAddress) lines.push(`العنوان: ${customerAddress}`);
+    lines.push("");
+  }
+
+  lines.push("*تفاصيل المنتجات:*");
+  items.forEach((item, index) => {
+    lines.push(`${index + 1}. ${item.name}`);
+    lines.push(`   الكمية: ${item.quantity} | السعر: $${item.price.toFixed(2)}`);
+  });
+
+  lines.push("");
+  lines.push(`*الإجمالي: $${totalAmount.toFixed(2)}*`);
+  lines.push("");
+  lines.push("شكراً لاختياركم MAD_TECH!");
 
   return lines.join("\n");
 }
@@ -134,8 +173,14 @@ export async function POST(request: Request) {
       0
     );
 
+    const orderNumber = await generateOrderNumber();
+
     const order = await prisma.order.create({
       data: {
+        orderNumber,
+        customerName: body.customerName?.trim() || null,
+        customerPhone: body.customerPhone?.trim() || null,
+        customerAddress: body.customerAddress?.trim() || null,
         totalAmount,
         items: {
           create: body.items.map((item) => ({
@@ -149,12 +194,20 @@ export async function POST(request: Request) {
       include: { items: true },
     });
 
-    const message = buildWhatsAppMessage(body.items, totalAmount);
+    const message = buildWhatsAppMessage(
+      orderNumber,
+      body.items,
+      totalAmount,
+      body.customerName,
+      body.customerPhone,
+      body.customerAddress
+    );
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
 
     return NextResponse.json(
       {
         orderId: order.id,
+        orderNumber: order.orderNumber,
         totalAmount: Number(order.totalAmount),
         whatsappUrl,
       },

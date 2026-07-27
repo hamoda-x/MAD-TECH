@@ -14,7 +14,7 @@ export interface Product {
   createdAt: string;
 }
 
-export type OrderStatus = "PENDING" | "COMPLETED";
+export type OrderStatus = "PENDING" | "COMPLETED" | "CANCELLED";
 
 export interface OrderItem {
   id: string;
@@ -27,6 +27,10 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  orderNumber: string;
+  customerName: string | null;
+  customerPhone: string | null;
+  customerAddress: string | null;
   totalAmount: number;
   createdAt: string;
   status: OrderStatus;
@@ -41,15 +45,20 @@ export interface ReportsData {
   topProducts: Array<{ name: string; quantity: number; revenue: number }>;
   recentOrders: Array<{
     id: string;
+    orderNumber: string;
     totalAmount: number;
     status: OrderStatus;
     createdAt: string;
     itemCount: number;
+    customerName: string | null;
   }>;
+  revenueChart: Array<{ name: string; value: number }>;
+  ordersChart: Array<{ name: string; value: number }>;
 }
 
 export interface CreateOrderResponse {
   orderId: string;
+  orderNumber: string;
   totalAmount: number;
   whatsappUrl: string;
 }

@@ -14,6 +14,7 @@ export default function CartPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
     name: "",
@@ -75,16 +76,15 @@ export default function CartPage() {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-        }))
+        })),
+        customerInfo
       );
 
-      const customerDetails = `\n\nالاسم: ${customerInfo.name}\nالجوال: ${customerInfo.phone}\nالعنوان: ${customerInfo.address}`;
-      const whatsappUrl = result.whatsappUrl + encodeURIComponent(customerDetails);
-
       setSuccess(true);
+      setOrderNumber(result.orderNumber);
       clearCart();
       setShowCustomerModal(false);
-      window.open(whatsappUrl, "_blank");
+      window.open(result.whatsappUrl, "_blank");
     } catch (err) {
       setError(err instanceof Error ? err.message : t("error"));
     } finally {
@@ -105,6 +105,11 @@ export default function CartPage() {
               ? "تم فتح واتساب لإرسال تفاصيل الطلب للمدير"
               : "WhatsApp opened to send order details to manager"}
           </p>
+          {orderNumber && (
+            <p className="mt-2 text-lg font-bold text-mad-accent">
+              {lang === "ar" ? `رقم الطلب: ${orderNumber}` : `Order: ${orderNumber}`}
+            </p>
+          )}
           <Link href="/" className="mt-6 inline-block">
             <button className="px-6 py-3 bg-mad-accent text-mad-dark font-semibold rounded-lg hover:bg-mad-accent-light transition-colors">
               {t("backToStore")}

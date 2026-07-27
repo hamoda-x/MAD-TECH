@@ -78,11 +78,12 @@ export async function deleteProduct(id: string): Promise<void> {
 }
 
 export async function createOrder(
-  items: Array<{ id: string; name: string; price: number; quantity: number }>
+  items: Array<{ id: string; name: string; price: number; quantity: number }>,
+  customerInfo?: { name: string; phone: string; address: string }
 ): Promise<CreateOrderResponse> {
   return apiFetch<CreateOrderResponse>("/orders", {
     method: "POST",
-    body: JSON.stringify({ items }),
+    body: JSON.stringify({ items, ...customerInfo }),
   });
 }
 
@@ -92,7 +93,7 @@ export async function getOrders(): Promise<Order[]> {
 
 export async function updateOrderStatus(
   id: string,
-  status: "PENDING" | "COMPLETED"
+  status: "PENDING" | "COMPLETED" | "CANCELLED"
 ): Promise<Order> {
   return apiFetch<Order>(`/orders/${id}`, {
     method: "PATCH",
@@ -126,6 +127,19 @@ export async function uploadFile(file: File): Promise<{ url: string }> {
 
 export async function getSettings(): Promise<StoreSettings> {
   return apiFetch<StoreSettings>("/settings");
+}
+
+export interface SystemInfo {
+  dbConnected: boolean;
+  serverRunning: boolean;
+  version: string;
+  productCount: number;
+  orderCount: number;
+  totalRecords: number;
+}
+
+export async function getSystemInfo(): Promise<SystemInfo> {
+  return apiFetch<SystemInfo>("/system-info");
 }
 
 export async function updateSettings(data: Partial<StoreSettings>): Promise<StoreSettings> {

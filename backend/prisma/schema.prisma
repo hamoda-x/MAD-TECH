@@ -10,6 +10,7 @@ datasource db {
 enum OrderStatus {
   PENDING
   COMPLETED
+  CANCELLED
 }
 
 model Admin {
@@ -58,11 +59,16 @@ model Product {
 
 model Order {
   id          String      @id @default(cuid())
+  orderNumber String      @unique
+  customerName String?
+  customerPhone String?
+  customerAddress String?
   totalAmount Decimal     @db.Decimal(10, 2)
   createdAt   DateTime    @default(now())
   status      OrderStatus @default(PENDING)
   items       OrderItem[]
 
+  @@index([orderNumber])
   @@index([createdAt])
   @@index([status])
 }

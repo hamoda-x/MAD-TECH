@@ -155,8 +155,12 @@ export async function POST(request: Request) {
           await tx.order.create({
             data: {
               id: o.id as string,
+              orderNumber: (o.orderNumber as string) || `MT-RESTORE-${Date.now()}`,
               totalAmount: o.totalAmount as number,
               status: o.status as never,
+              customerName: (o.customerName as string) || null,
+              customerPhone: (o.customerPhone as string) || null,
+              customerAddress: (o.customerAddress as string) || null,
               createdAt: new Date(o.createdAt as string),
             },
           });

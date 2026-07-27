@@ -45,11 +45,35 @@ export async function GET() {
 
     const recentOrders = orders.slice(0, 10).map((order) => ({
       id: order.id,
+      orderNumber: order.orderNumber,
       totalAmount: Number(order.totalAmount),
       status: order.status,
       createdAt: order.createdAt,
       itemCount: order.items.length,
+      customerName: order.customerName,
     }));
+
+    const now = new Date();
+    const last7Days: { name: string; value: number }[] = [];
+    const last7DaysOrders: { name: string; value: number }[] = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const dayEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1);
+      const dayLabel = `${d.getDate()}/${d.getMonth() + 1}`;
+      const dayOrders = orders.filter(
+        (o) => o.createdAt >= dayStart && o.createdAt < dayEnd
+      );
+      last7Days.push({
+        name: dayLabel,
+        value: dayOrders.reduce((sum, o) => sum + Number(o.totalAmount), 0),
+      });
+      last7DaysOrders.push({
+        name: dayLabel,
+        value: dayOrders.length,
+      });
+    }
 
     return NextResponse.json({
       totalOrders,
@@ -58,6 +82,8 @@ export async function GET() {
       completedOrders,
       topProducts,
       recentOrders,
+      revenueChart: last7Days,
+      ordersChart: last7DaysOrders,
     });
   } catch (error) {
     console.error("GET /api/reports failed:", error);

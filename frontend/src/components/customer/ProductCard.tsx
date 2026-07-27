@@ -6,6 +6,7 @@ import { Product } from "@/types";
 import { useLanguageStore } from "@/store/languageStore";
 import { useSettingsStore } from "@/store/settingsStore";
 import { useTranslation } from "@/lib/i18n/useTranslation";
+import { createOrder } from "@/lib/api";
 import CustomerInfoModal from "@/components/shared/CustomerInfoModal";
 
 interface ProductCardProps {
@@ -37,11 +38,20 @@ export default function ProductCard({ product, onClick }: ProductCardProps) {
   const { t } = useTranslation();
   const price = getPrice(product.price);
 
-  const handleCustomerConfirm = (info: { name: string; phone: string; address: string }) => {
-    const customerDetails = `\n\nالاسم: ${info.name}\nالجوال: ${info.phone}\nالعنوان: ${info.address}`;
-    const whatsappUrl = generateWhatsAppUrl(product, price, lang, getWhatsAppNumber(), customerDetails);
-    setShowCustomerModal(false);
-    window.open(whatsappUrl, "_blank");
+  const handleCustomerConfirm = async (info: { name: string; phone: string; address: string }) => {
+    try {
+      const result = await createOrder(
+        [{ id: product.id, name: product.name, price, quantity: 1 }],
+        info
+      );
+      setShowCustomerModal(false);
+      window.open(result.whatsappUrl, "_blank");
+    } catch {
+      const customerDetails = `\n\nالاسم: ${info.name}\nالجوال: ${info.phone}\nالعنوان: ${info.address}`;
+      const whatsappUrl = generateWhatsAppUrl(product, price, lang, getWhatsAppNumber(), customerDetails);
+      setShowCustomerModal(false);
+      window.open(whatsappUrl, "_blank");
+    }
   };
 
   return (
