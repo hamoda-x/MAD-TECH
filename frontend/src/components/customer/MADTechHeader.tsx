@@ -33,7 +33,11 @@ export default function MADTechHeader({ onSearchOpen }: MADTechHeaderProps) {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        !(event.target as HTMLElement).closest("[data-menu-toggle]")
+      ) {
         setIsMobileMenuOpen(false);
       }
     };
@@ -130,6 +134,7 @@ export default function MADTechHeader({ onSearchOpen }: MADTechHeaderProps) {
 
             {/* Mobile Menu Button */}
             <button
+              data-menu-toggle
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="lg:hidden p-2.5 rounded-xl text-mad-text-secondary hover:text-mad-cyan hover:bg-mad-cyan/10 transition-all duration-200"
             >
