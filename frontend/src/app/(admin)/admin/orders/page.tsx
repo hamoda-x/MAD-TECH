@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, useMemo, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { getOrders, updateOrderStatus } from "@/lib/api";
 import { Order, formatDate, formatPrice } from "@/types";
 import Loader from "@/components/shared/Loader";
@@ -11,12 +12,13 @@ import { useLanguageStore } from "@/store/languageStore";
 type StatusFilter = "ALL" | "PENDING" | "COMPLETED" | "CANCELLED";
 
 export default function AdminOrdersPage() {
+  const searchParams = useSearchParams();
   const dir = useLanguageStore((s) => s.dir);
   const lang = useLanguageStore((s) => s.lang);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(searchParams.get("search") || "");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -66,6 +68,13 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     loadOrders();
   }, [loadOrders]);
+
+  useEffect(() => {
+    const urlSearch = searchParams.get("search");
+    if (urlSearch) {
+      setSearch(urlSearch);
+    }
+  }, [searchParams]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {

@@ -1,11 +1,23 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useThemeStore } from "@/store/themeStore";
 
 export default function AdminHeader({ onMenuToggle }: { onMenuToggle?: () => void }) {
   const { data: session } = useSession();
   const { isDark, toggle } = useThemeStore();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = query.trim();
+    if (trimmed) {
+      router.push(`/admin/orders?search=${encodeURIComponent(trimmed)}`);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between border-b border-mad-border bg-mad-surface px-4 py-3 sm:px-6 sm:py-4 lg:px-8">
@@ -22,7 +34,7 @@ export default function AdminHeader({ onMenuToggle }: { onMenuToggle?: () => voi
             </svg>
           </button>
         )}
-        <div className="relative hidden sm:block">
+        <form onSubmit={handleSearch} className="relative hidden sm:block">
           <svg
             className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-mad-muted"
             fill="none"
@@ -34,12 +46,12 @@ export default function AdminHeader({ onMenuToggle }: { onMenuToggle?: () => voi
           </svg>
           <input
             type="text"
-            id="searchGlobal"
-            name="searchGlobal"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="البحث عن منتج، طلب، عميل..."
             className="w-48 rounded-xl border border-mad-border bg-mad-bg py-2.5 pr-10 pl-4 text-sm text-mad-text placeholder-mad-muted outline-none transition-colors focus:border-mad-accent md:w-72 lg:w-96"
           />
-        </div>
+        </form>
       </div>
 
       <div className="flex items-center gap-2 sm:gap-3">
