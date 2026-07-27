@@ -213,3 +213,23 @@ export async function transferCategoryProducts(
     body: JSON.stringify({ sourceCategoryId, targetCategoryId }),
   });
 }
+
+export async function trackVisitor(path: string): Promise<void> {
+  try {
+    await apiFetch("/visitors", {
+      method: "POST",
+      body: JSON.stringify({ path }),
+    });
+  } catch {}
+}
+
+export interface VisitorData {
+  todayCount: number;
+  weekCount: number;
+  totalCount: number;
+  dailyData: Array<{ date: string; count: number }>;
+}
+
+export async function getVisitorStats(): Promise<VisitorData> {
+  return apiFetch<VisitorData>("/visitors");
+}

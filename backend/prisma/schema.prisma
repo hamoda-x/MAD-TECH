@@ -80,3 +80,12 @@ model OrderItem {
   @@index([orderId])
   @@index([productId])
 }
+
+model Visitor {
+  id        String   @id @default(cuid())
+  date      DateTime @default(now())
+  path      String   @default("/")
+  userAgent String?
+
+  @@index([date])
+}

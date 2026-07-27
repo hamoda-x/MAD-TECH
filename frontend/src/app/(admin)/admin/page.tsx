@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { getReports } from "@/lib/api";
+import { getReports, getVisitorStats } from "@/lib/api";
 import { ReportsData, formatDate, formatPrice } from "@/types";
+import type { VisitorData } from "@/lib/api";
 import StatsCard from "@/components/admin/StatsCard";
 import Loader from "@/components/shared/Loader";
 import { useLanguageStore } from "@/store/languageStore";
@@ -65,6 +66,11 @@ const statsIcons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
     </svg>
   ),
+  visitors: (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+    </svg>
+  ),
 };
 
 const statusStyles: Record<string, string> = {
@@ -74,6 +80,7 @@ const statusStyles: Record<string, string> = {
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<ReportsData | null>(null);
+  const [visitorData, setVisitorData] = useState<VisitorData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -82,8 +89,14 @@ export default function AdminDashboardPage() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    getReports()
-      .then(setData)
+    Promise.all([
+      getReports(),
+      getVisitorStats(),
+    ])
+      .then(([reports, visitors]) => {
+        setData(reports);
+        setVisitorData(visitors);
+      })
       .catch((err) =>
         setError(err instanceof Error ? err.message : t("error"))
       )
@@ -128,7 +141,7 @@ export default function AdminDashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatsCard
           title={t("totalProducts")}
           value={data.totalOrders}
@@ -158,6 +171,13 @@ export default function AdminDashboardPage() {
           change="+18% عن الشهر الماضي"
           changeType="positive"
           icon={statsIcons.completed}
+        />
+        <StatsCard
+          title={lang === "ar" ? "زوار اليوم" : "Today's Visitors"}
+          value={visitorData?.todayCount ?? 0}
+          subtitle={lang === "ar" ? `${visitorData?.weekCount ?? 0} زائر هذا الأسبوع` : `${visitorData?.weekCount ?? 0} this week`}
+          changeType="positive"
+          icon={statsIcons.visitors}
         />
       </div>
 

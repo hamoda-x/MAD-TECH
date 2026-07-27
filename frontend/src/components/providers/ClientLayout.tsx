@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import SessionProvider from "@/components/providers/SessionProvider";
 import ThemeProvider from "@/components/providers/ThemeProvider";
+import VisitorTracker from "@/components/shared/VisitorTracker";
 import { useLanguageStore } from "@/store/languageStore";
 
 export default function ClientLayout({
@@ -21,7 +22,10 @@ export default function ClientLayout({
 
   return (
     <SessionProvider>
-      <ThemeProvider>{children}</ThemeProvider>
+      <ThemeProvider>
+        <VisitorTracker />
+        {children}
+      </ThemeProvider>
     </SessionProvider>
   );
 }
