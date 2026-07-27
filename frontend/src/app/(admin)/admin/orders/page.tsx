@@ -174,7 +174,7 @@ export default function AdminOrdersPage() {
             </svg>
             <input
               type="text"
-              placeholder="ابحث برقم الطلب، اسم العميل، الهاتف..."
+              placeholder={lang === "ar" ? "ابحث برقم الطلب، اسم العميل، الهاتف، اسم المنتج..." : "Search by order number, customer name, phone, product..."}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
               className="w-full rounded-xl border border-mad-border bg-mad-bg py-2.5 pr-10 pl-4 text-sm text-mad-text placeholder-mad-muted outline-none transition-colors focus:border-mad-accent"

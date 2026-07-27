@@ -83,7 +83,12 @@ export async function createOrder(
 ): Promise<CreateOrderResponse> {
   return apiFetch<CreateOrderResponse>("/orders", {
     method: "POST",
-    body: JSON.stringify({ items, ...customerInfo }),
+    body: JSON.stringify({
+      items,
+      customerName: customerInfo?.name,
+      customerPhone: customerInfo?.phone,
+      customerAddress: customerInfo?.address,
+    }),
   });
 }
 
